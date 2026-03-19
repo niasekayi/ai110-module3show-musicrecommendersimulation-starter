@@ -8,44 +8,73 @@ Run with:
 from recommender import load_songs, recommend_songs
 
 
-def print_recommendations(recommendations: list, profile_label: str) -> None:
-    """Print a ranked list of song recommendations with scores and reasons."""
+# ---------------------------------------------------------------------------
+# User profiles — each dict represents a listener's taste preferences.
+# Keys must match what score_song() reads.
+# ---------------------------------------------------------------------------
+PROFILES = [
+    {
+        "name":           "High-Energy Pop",
+        "favorite_genre": "pop",
+        "favorite_mood":  "happy",
+        "target_energy":  0.90,
+        "target_tempo_bpm": 128,
+    },
+    {
+        "name":           "Chill Lofi",
+        "favorite_genre": "lofi",
+        "favorite_mood":  "chill",
+        "target_energy":  0.35,
+        "target_tempo_bpm": 75,
+    },
+    {
+        "name":           "Deep Intense Rock",
+        "favorite_genre": "rock",
+        "favorite_mood":  "intense",
+        "target_energy":  0.92,
+        "target_tempo_bpm": 150,
+    },
+]
 
-    # Header — describes which user profile generated these results
-    print(f"\n{'=' * 52}")
-    print(f"  Top Song Recommendations ({profile_label})")
-    print(f"{'=' * 52}")
+
+def print_recommendations(recommendations: list, profile_name: str) -> None:
+    """Print a ranked list of song recommendations with scores and reasons."""
+    width = 56
+
+    # Profile header block
+    print(f"\n{'#' * width}")
+    print(f"  PROFILE: {profile_name}")
+    print(f"{'#' * width}")
 
     for rank, (song, score, reasons) in enumerate(recommendations, start=1):
-        # Rank + title + score on one line
+        # Rank line: number, title, score
         print(f"\n  #{rank}  {song['title']}  —  Score: {score:.2f}")
-        print(f"       Artist: {song['artist']}  |  Genre: {song['genre']}  |  Mood: {song['mood']}")
+        print(f"  {'─' * (width - 4)}")
+        print(f"     Artist : {song['artist']}")
+        print(f"     Genre  : {song['genre']}   |   Mood: {song['mood']}")
+        print(f"     Energy : {song['energy']}  |   BPM:  {song['tempo_bpm']}")
 
-        # Reasons printed as indented bullet points
-        print("       Why matched:")
+        # Match reasons as bullet points
+        print(f"     Why matched:")
         for reason in reasons:
-            print(f"         • {reason}")
+            print(f"       • {reason}")
 
-    # Footer separator
-    print(f"\n{'=' * 52}\n")
+    print(f"\n{'─' * width}\n")
 
 
 def main() -> None:
     songs = load_songs("data/songs.csv")
-    print(f"Loaded {len(songs)} songs.")
+    print(f"\nLoaded {len(songs)} songs from dataset.")
+    print(f"Running recommendations for {len(PROFILES)} profiles...\n")
 
-    # User profile — keys must match what score_song() expects
-    user_prefs = {
-        "favorite_genre": "Pop",
-        "favorite_mood":  "Happy",
-        "target_energy":  0.8,
-    }
+    # Loop through each profile, score all songs, print top 5
+    for profile in PROFILES:
+        # Separate the display name before passing prefs to recommender
+        name = profile["name"]
+        prefs = {k: v for k, v in profile.items() if k != "name"}
 
-    recommendations = recommend_songs(user_prefs, songs, k=5)
-
-    # Build a readable label from the profile for the header
-    profile_label = f"{user_prefs['favorite_genre']} / {user_prefs['favorite_mood']} Profile"
-    print_recommendations(recommendations, profile_label)
+        recommendations = recommend_songs(prefs, songs, k=5)
+        print_recommendations(recommendations, name)
 
 
 if __name__ == "__main__":
